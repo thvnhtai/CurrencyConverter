@@ -1,29 +1,48 @@
 import XCTest
 @testable import CurrencyConverter
 
-final class CurrencyConverterTests: XCTestCase {
-
+class CurrencyConverterTests: XCTestCase {
+    
+    var viewModel: CurrencyConverterViewModel!
+    
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+        viewModel = CurrencyConverterViewModel()
     }
-
+    
     override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+        viewModel = nil
+    }
+    
+    func testValidConversion() {
+        viewModel.exchangeRates = ["USD": 1.0, "EUR": 0.85]
+        viewModel.selectedFromCurrency = "USD"
+        viewModel.selectedToCurrency = "EUR"
+        viewModel.inputAmount = "100"
+
+        viewModel.convert()
+
+        XCTAssertEqual(viewModel.convertedAmount, "85.00", "Conversion result is incorrect")
     }
 
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
+    func testInvalidInput() {
+        viewModel.inputAmount = "invalid_amount"
+        viewModel.convert()
+
+        XCTAssertTrue(viewModel.convertedAmount.isEmpty, "Converted amount should be empty for invalid input")
+        XCTAssertEqual(viewModel.errorMessage, "Invalid input. Please enter a valid number.", "Expected error message for invalid input")
     }
 
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
+    
+    func testNetworkErrorHandling() {
+        viewModel.exchangeRates = [:]
+        viewModel.selectedFromCurrency = "USD"
+        viewModel.selectedToCurrency = "EUR"
+        viewModel.inputAmount = "100"
+
+        viewModel.convert()
+
+        XCTAssertEqual(viewModel.convertedAmount, "", "Converted amount should be empty when exchange rates are unavailable")
+        XCTAssertEqual(viewModel.errorMessage, "Exchange rate data is unavailable.", "An error message should be set when exchange rates are unavailable")
     }
 
 }
